@@ -9,6 +9,33 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Handle OAuth callback with hash fragments (fallback for localhost redirects)
+    const handleHashRedirect = async () => {
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        
+        if (accessToken && refreshToken) {
+          // Clear the hash from URL
+          window.history.replaceState(null, '', window.location.pathname)
+          
+          // Set the session manually
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          
+          if (data.session) {
+            setSession(data.session)
+            setLoading(false)
+          }
+        }
+      }
+    }
+
+    handleHashRedirect()
+
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
       setLoading(false)

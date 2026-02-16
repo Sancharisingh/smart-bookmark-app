@@ -55,7 +55,6 @@ export default function BookmarkApp({ user }: any) {
     ]).select()
 
     if (!error && data) {
-      // Optimistically update UI immediately
       setBookmarks((prev) => [data[0], ...prev])
       setUrl('')
       setTitle('')
@@ -63,7 +62,18 @@ export default function BookmarkApp({ user }: any) {
   }
 
   async function deleteBookmark(id: string) {
-    await supabase.from('bookmarks').delete().eq('id', id)
+    setBookmarks((prev) => prev.filter((b) => b.id !== id))
+    
+    const { error } = await supabase
+      .from('bookmarks')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id) 
+    
+    if (error) {
+      fetchBookmarks()
+      console.error('Error deleting bookmark:', error)
+    }
   }
 
   return (

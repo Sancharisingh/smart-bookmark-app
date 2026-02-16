@@ -6,15 +6,18 @@ import BookmarkApp from './bookmark-app'
 
 export default function Home() {
   const [session, setSession] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
+      setLoading(false)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session)
+        setLoading(false)
       }
     )
 
@@ -22,6 +25,14 @@ export default function Home() {
       listener.subscription.unsubscribe()
     }
   }, [])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
 
   if (!session) {
     return (

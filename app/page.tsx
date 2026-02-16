@@ -9,6 +9,29 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Handle OAuth callback with code parameter (when Supabase redirects to wrong URL)
+    const handleCodeRedirect = async () => {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get('code')
+        
+        if (code) {
+          // Redirect to the callback route if we're on the wrong domain
+          const currentOrigin = window.location.origin
+          if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
+            // If we're on localhost but should be on Vercel, redirect to Vercel callback
+            const vercelUrl = 'https://smart-bookmark-app-sandy-phi.vercel.app'
+            window.location.href = `${vercelUrl}/auth/callback?code=${code}`
+            return
+          } else {
+            // We're on the right domain, redirect to callback route
+            window.location.href = `${currentOrigin}/auth/callback?code=${code}`
+            return
+          }
+        }
+      }
+    }
+
     // Handle OAuth callback with hash fragments (fallback for localhost redirects)
     const handleHashRedirect = async () => {
       if (typeof window !== 'undefined' && window.location.hash) {
@@ -34,6 +57,7 @@ export default function Home() {
       }
     }
 
+    handleCodeRedirect()
     handleHashRedirect()
 
     supabase.auth.getSession().then(({ data }) => {

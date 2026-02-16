@@ -61,13 +61,25 @@ Before deploying, make sure to add these environment variables in your Vercel pr
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
 
-### Step 2: Deploy
+### Step 2: Configure Supabase Redirect URLs
+
+**CRITICAL:** You must add your Vercel URL to Supabase's allowed redirect URLs, otherwise OAuth will fail with "localhost refused to connect" error.
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication** → **URL Configuration**
+3. Under **Redirect URLs**, add:
+   - `https://your-vercel-app.vercel.app/auth/callback`
+   - `https://your-vercel-app.vercel.app` (for development, also keep `http://localhost:3000/auth/callback`)
+
+### Step 3: Deploy
 
 1. Push your code to GitHub
 2. Import your repository in Vercel
 3. Vercel will automatically detect Next.js and deploy
 
-**Important:** Make sure environment variables are set before deploying, otherwise the build will fail.
+**Important:** 
+- Make sure environment variables are set before deploying, otherwise the build will fail.
+- Make sure Supabase redirect URLs are configured, otherwise OAuth login will redirect to localhost and fail.
 
 ## Problems Encountered and Solutions
 
@@ -100,6 +112,14 @@ Before deploying, make sure to add these environment variables in your Vercel pr
 **Problem:** Realtime subscription was listening to all bookmark changes, not just the current user's.
 
 **Solution:** Added user-specific filter to the realtime subscription so it only listens to changes for the logged-in user's bookmarks.
+
+### 6. OAuth Redirect to Localhost After Deployment
+**Problem:** After deploying to Vercel, clicking "Sign in with Google" redirected to localhost instead of the Vercel URL, causing "ERR_CONNECTION_REFUSED" error.
+
+**Solution:** 
+- Created OAuth callback route handler at `app/auth/callback/route.ts` to handle the OAuth code exchange
+- Updated OAuth sign-in to use `redirectTo: ${origin}/auth/callback` 
+- Added Vercel URL to Supabase's allowed redirect URLs in Authentication → URL Configuration
 
 ## Database Setup
 

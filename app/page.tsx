@@ -38,16 +38,18 @@ export default function Home() {
     return (
       <div className="flex h-screen items-center justify-center">
         <button
-          onClick={() =>
+          onClick={() => {
+            const origin = typeof window !== 'undefined' ? window.location.origin : ''
             supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
+                redirectTo: `${origin}/auth/callback`,
                 queryParams: {
                   prompt: 'select_account',
                 },
               },
             })
-          }
+          }}
           className="px-6 py-3 bg-black text-white rounded"
         >
           Sign in with Google

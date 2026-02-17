@@ -1,6 +1,30 @@
 # Smart Bookmark App
 
-A bookmark manager application built with Next.js, Supabase, and Tailwind CSS. Users can sign in with Google OAuth, add bookmarks with URLs and titles, and manage their bookmarks in real-time.
+A bookmark manager built as a take‑home assignment using Next.js (App Router) and Supabase.  
+Users sign in with Google OAuth, save private bookmarks, and see changes update in real time.
+
+## Live Demo
+
+- **Production URL**: https://smart-bookmark-app-sandy-phi.vercel.app  
+- **Auth**: Google OAuth only (no email/password). You can sign in with any Google account.
+
+## How it meets the assignment requirements
+
+1. **Sign up and log in using Google**
+   - Implemented with `supabase.auth.signInWithOAuth({ provider: 'google' })`.
+   - Uses the hosted Supabase Auth UI flow and stores the session client‑side.
+2. **Add a bookmark (URL + title)**
+   - Simple form with validation; on submit it inserts into the `bookmarks` table and updates UI optimistically.
+3. **Bookmarks are private to each user**
+   - All queries filter by `user_id = session.user.id`.
+   - Supabase Row Level Security policies (RLS) ensure users can only see and modify their own rows.
+4. **Real‑time updates without page refresh**
+   - A Supabase realtime channel subscribes to `postgres_changes` on the `bookmarks` table.
+   - When a bookmark is inserted/deleted in another tab, the list refetches automatically.
+5. **Users can delete their own bookmarks**
+   - Each bookmark row has a Delete button which removes the row in Supabase and from local state.
+6. **Deployed on Vercel**
+   - Production deployment lives at the URL above and is wired to the Supabase project.
 
 ## Features
 
@@ -63,13 +87,13 @@ Before deploying, make sure to add these environment variables in your Vercel pr
 
 ### Step 2: Configure Supabase Redirect URLs
 
-**CRITICAL:** You must add your Vercel URL to Supabase's allowed redirect URLs, otherwise OAuth will fail with "localhost refused to connect" error.
-
 1. Go to your Supabase project dashboard
 2. Navigate to **Authentication** → **URL Configuration**
-3. Under **Redirect URLs**, add:
-   - `https://your-vercel-app.vercel.app/auth/callback`
-   - `https://your-vercel-app.vercel.app` (for development, also keep `http://localhost:3000/auth/callback`)
+3. Set **Site URL** to your deployed Vercel URL, for example:  
+   `https://your-vercel-app.vercel.app`
+4. Under **Redirect URLs**, add at least:
+   - `https://your-vercel-app.vercel.app`
+   - `http://localhost:3000` (for local development)
 
 ### Step 3: Deploy
 
@@ -114,12 +138,12 @@ Before deploying, make sure to add these environment variables in your Vercel pr
 **Solution:** Added user-specific filter to the realtime subscription so it only listens to changes for the logged-in user's bookmarks.
 
 ### 6. OAuth Redirect to Localhost After Deployment
-**Problem:** After deploying to Vercel, clicking "Sign in with Google" redirected to localhost instead of the Vercel URL, causing "ERR_CONNECTION_REFUSED" error.
+**Problem:** After deploying to Vercel, clicking "Sign in with Google" initially redirected to localhost instead of the Vercel URL, causing "ERR_CONNECTION_REFUSED" error.
 
 **Solution:** 
-- Created OAuth callback route handler at `app/auth/callback/route.ts` to handle the OAuth code exchange
-- Updated OAuth sign-in to use `redirectTo: ${origin}/auth/callback` 
-- Added Vercel URL to Supabase's allowed redirect URLs in Authentication → URL Configuration
+- Simplified the auth flow to rely on Supabase's built‑in client handling (`detectSessionInUrl`)
+- Updated OAuth sign-in to use `redirectTo: origin` so the user returns to the same domain
+- Correctly configured **Site URL** and **Redirect URLs** in Supabase to point at the Vercel deployment (and localhost for dev)
 
 ## Database Setup
 

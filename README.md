@@ -1,6 +1,6 @@
 # Smart Bookmark App
 
-A bookmark manager built as a take‑home assignment using Next.js (App Router) and Supabase.  
+A bookmark manager built using Next.js (App Router) and Supabase.  
 Users sign in with Google OAuth, save private bookmarks, and see changes update in real time.
 
 ## Live Demo
